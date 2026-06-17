@@ -10,19 +10,31 @@ import { reconcilePlugins } from '../core/settings.js';
 import { ensureGitignore } from '../core/gitignore.js';
 import { info, die } from '../util/log.js';
 
-/** @param {string[]} _args */
-export function run(_args) {
+/** @param {string[]} args */
+export function run(args) {
+  const dryRun = args.includes('--dry-run');
   const proj = projectDir();
   const marker = readMarker(proj);
   if (!marker) {
     die("aucun profil à synchroniser (pas de marqueur). Lance d'abord: ccprofile apply <profil>");
   }
-
   const { plugins, skills } = resolveProfiles(marker.profiles ?? []);
   const expectedSkills = new Set([...skills, ...(marker.extraSkills ?? [])].filter(Boolean));
-  const expectedPlugins = [...new Set(plugins.filter(Boolean))];
-
+  const expectedPlugins = [...new Set(plugins.filter(Boolean))].sort();
   const dir = skillsDir(proj);
+
+  if (dryRun) {
+    let current = [];
+    try { current = fs.readdirSync(dir); } catch { current = []; }
+    const toRemove = current.filter((b) => !expectedSkills.has(b)).sort();
+    const toAdd = [...expectedSkills].filter((s) => !current.includes(s)).sort();
+    info('sync (dry-run — aucune écriture)');
+    info(`  skills à retirer : ${toRemove.length ? toRemove.join(', ') : '(aucun)'}`);
+    info(`  skills à lier    : ${toAdd.length ? toAdd.join(', ') : '(aucun)'}`);
+    info(`  plugins gérés    : ${expectedPlugins.length ? expectedPlugins.join(', ') : '(aucun)'}`);
+    return 0;
+  }
+
   fs.mkdirSync(dir, { recursive: true });
 
   let removed = 0;

@@ -10,6 +10,15 @@ import * as sync from './commands/sync.js';
 import * as show from './commands/show.js';
 import * as hint from './commands/hint.js';
 import * as reset from './commands/reset.js';
+import * as validate from './commands/validate.js';
+import * as diff from './commands/diff.js';
+import * as doctor from './commands/doctor.js';
+import * as init from './commands/init.js';
+import * as upgrade from './commands/upgrade.js';
+import * as exportCmd from './commands/export.js';
+import * as importCmd from './commands/import.js';
+import * as shareCmd from './commands/share.js';
+import * as pull from './commands/pull.js';
 
 const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = core minimal)
 
@@ -20,9 +29,18 @@ const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = cor
   ccprofile verify [--json]       vérifie la dérive : projet vs définition courante du profil
   ccprofile sync                  réconcilie le projet sur la définition courante du profil
   ccprofile inspect <profil>      détaille plugins + skills d'un profil (avec extends)
+  ccprofile diff <pA> <pB>        compare deux profils (plugins + skills)
   ccprofile show                  état du projet courant
   ccprofile hint                  ligne unique pour hook SessionStart (silencieux si à jour)
   ccprofile reset                 vide skills + plugins + marqueur du projet courant
+  ccprofile init [--force]        copie les profils par défaut dans ~/.claude/profiles
+  ccprofile validate <profil>     valide un profil (schéma + skills/plugins référencés)
+  ccprofile doctor                diagnostic santé (profils, liens cassés, env)
+  ccprofile export <profil> [--resolved] [--out <f>]  exporte un profil (JSON)
+  ccprofile import <fichier|url>  importe un profil/bundle partagé
+  ccprofile share <profil> [--resolved] | --all  publie un profil (ou tous) sur GitHub Gist
+  ccprofile pull <gist|url>       importe un profil/bundle depuis un gist
+  ccprofile upgrade               met à jour ccprofile (npm -g)
 
 Profils : ~/.claude/profiles/*.json     Store : ~/.claude/skills-store
 Marqueur: <projet>/.claude/ccprofile.json`;
@@ -66,6 +84,24 @@ export async function run(argv) {
         return await hint.run(rest);
       case 'reset':
         return await reset.run(rest);
+      case 'validate':
+        return await validate.run(rest);
+      case 'diff':
+        return await diff.run(rest);
+      case 'doctor':
+        return await doctor.run(rest);
+      case 'init':
+        return await init.run(rest);
+      case 'upgrade':
+        return upgrade.run(rest);
+      case 'export':
+        return await exportCmd.run(rest);
+      case 'import':
+        return await importCmd.run(rest);
+      case 'pull':
+        return await pull.run(rest);
+      case 'share':
+        return await shareCmd.run(rest);
       default:
         throw new CcprofileError(`commande inconnue: ${cmd} (voir: ccprofile help)`);
     }

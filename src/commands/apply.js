@@ -11,17 +11,27 @@ import { info, die } from '../util/log.js';
 
 /** @param {string[]} args */
 export function run(args) {
-  if (args.length < 1) {
-    die('usage: ccprofile apply <profil> [profil...]');
+  const dryRun = args.includes('--dry-run');
+  const profileArgs = args.filter((a) => a !== '--dry-run');
+  if (profileArgs.length < 1) {
+    die('usage: ccprofile apply <profil> [profil...] [--dry-run]');
   }
   const proj = projectDir();
+  const { plugins, skills } = resolveProfiles(profileArgs);
+
+  if (dryRun) {
+    info(`Projet : ${proj}`);
+    info(`Profils: ${profileArgs.join(' ')}  (dry-run — aucune écriture)`);
+    info(`  skills à lier  : ${skills.length ? skills.join(', ') : '(aucun)'}`);
+    info(`  plugins à activer : ${plugins.length ? plugins.join(', ') : '(aucun)'}`);
+    return 0;
+  }
+
   const dest = skillsDir(proj);
   fs.mkdirSync(dest, { recursive: true });
 
-  const { plugins, skills } = resolveProfiles(args);
-
   info(`Projet : ${proj}`);
-  info(`Profils: ${args.join(' ')}`);
+  info(`Profils: ${profileArgs.join(' ')}`);
 
   let ns = 0;
   for (const s of skills) {
@@ -36,7 +46,7 @@ export function run(args) {
   const prev = readMarker(proj);
   const prevExtra = prev?.extraSkills ?? [];
   const prevManaged = prev?.managedPlugins ?? [];
-  const profiles = [...new Set(args)].sort();
+  const profiles = [...new Set(profileArgs)].sort();
   const managed = [...new Set([...prevManaged, ...plugins])].sort();
   writeMarker(proj, { profiles, extraSkills: prevExtra, managedPlugins: managed });
 
