@@ -16,41 +16,41 @@ function runCli(args, { cwd, configDir }) {
   });
 }
 
-test('reset removes marker, skill links, enabledPlugins', () => {
+test('reset removes marker, copied skill dirs, enabledPlugins', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cch-'));
   const proj = fs.mkdtempSync(path.join(os.tmpdir(), 'ccp-'));
   const sdir = path.join(proj, '.claude', 'skills');
-  fs.mkdirSync(sdir, { recursive: true });
-  fs.symlinkSync(home, path.join(sdir, 'lnk'), process.platform === 'win32' ? 'junction' : 'dir');
+  // create a copied skill directory (copy semantics)
+  const copiedSkill = path.join(sdir, 'my-skill');
+  fs.mkdirSync(copiedSkill, { recursive: true });
+  fs.writeFileSync(path.join(copiedSkill, 'CLAUDE.md'), 'skill content');
   fs.writeFileSync(path.join(proj, '.claude', 'settings.json'), JSON.stringify({ enabledPlugins: { x: true } }));
-  fs.writeFileSync(path.join(proj, '.claude', 'ccprofile.json'), JSON.stringify({ profiles: [], v: 1 }));
+  fs.writeFileSync(path.join(proj, '.claude', 'ccprofile.json'), JSON.stringify({ profiles: [], managedMarketplaces: [], v: 2 }));
 
   const r = runCli(['reset'], { cwd: proj, configDir: home });
 
   assert.equal(r.status, 0);
   assert.equal(fs.existsSync(path.join(proj, '.claude', 'ccprofile.json')), false);
-  assert.equal(fs.existsSync(path.join(sdir, 'lnk')), false);
+  assert.equal(fs.existsSync(path.join(sdir, 'my-skill')), false);
   assert.equal(JSON.parse(fs.readFileSync(path.join(proj, '.claude', 'settings.json'), 'utf8')).enabledPlugins, undefined);
 });
 
-test('show omits broken symlinks', () => {
+test('show lists copied skill dirs, omits stray files', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cch-'));
   const proj = fs.mkdtempSync(path.join(os.tmpdir(), 'ccp-'));
   const sdir = path.join(proj, '.claude', 'skills');
-  fs.mkdirSync(sdir, { recursive: true });
-  // real skill dir
-  const realTarget = path.join(home, 'skills-store', 'good-skill');
-  fs.mkdirSync(realTarget, { recursive: true });
-  fs.symlinkSync(realTarget, path.join(sdir, 'good-skill'), process.platform === 'win32' ? 'junction' : 'dir');
-  // dangling symlink pointing to non-existent target
-  const missing = path.join(home, 'skills-store', 'gone-skill');
-  fs.symlinkSync(missing, path.join(sdir, 'gone-skill'), process.platform === 'win32' ? 'junction' : 'dir');
+  // copied skill directory
+  const goodSkill = path.join(sdir, 'good-skill');
+  fs.mkdirSync(goodSkill, { recursive: true });
+  fs.writeFileSync(path.join(goodSkill, 'CLAUDE.md'), 'skill content');
+  // stray file (not a directory) — should NOT appear as a skill
+  fs.writeFileSync(path.join(sdir, 'stray.txt'), 'oops');
 
   const r = runCli(['show'], { cwd: proj, configDir: home });
 
   const combined = r.stdout;
   assert.ok(combined.includes('good-skill'), 'good-skill should appear');
-  assert.ok(!combined.includes('gone-skill'), 'gone-skill (broken) should NOT appear');
+  assert.ok(!combined.includes('stray.txt'), 'stray file should NOT appear');
 });
 
 test('hint is silent and returns 0 when no marker and no signals', () => {
