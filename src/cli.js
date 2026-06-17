@@ -7,6 +7,9 @@ import * as detect from './commands/detect.js';
 import * as skill from './commands/skill.js';
 import * as verify from './commands/verify.js';
 import * as sync from './commands/sync.js';
+import * as show from './commands/show.js';
+import * as hint from './commands/hint.js';
+import * as reset from './commands/reset.js';
 
 const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = core minimal)
 
@@ -57,6 +60,12 @@ export async function run(argv) {
         return await verify.run(rest);
       case 'sync':
         return await sync.run(rest);
+      case 'show':
+        return await show.run(rest);
+      case 'hint':
+        return await hint.run(rest);
+      case 'reset':
+        return await reset.run(rest);
       default:
         throw new CcprofileError(`commande inconnue: ${cmd} (voir: ccprofile help)`);
     }
