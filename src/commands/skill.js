@@ -30,10 +30,11 @@ export function run(args) {
     writeMarker(proj, {
       profiles: prev.profiles ?? [],
       extraSkills: extra,
-      managedPlugins: prev.managedPlugins ?? []
+      managedPlugins: prev.managedPlugins ?? [],
+      managedMarketplaces: prev.managedMarketplaces ?? []
     });
   } else {
-    writeMarker(proj, { profiles: [], extraSkills: extra, managedPlugins: [] });
+    writeMarker(proj, { profiles: [], extraSkills: extra, managedPlugins: [], managedMarketplaces: [] });
   }
   info(`✓ ${ok} skill(s) ajouté(s) → ${dest} (suivi dans .claude/ccprofile.json)`);
   return 0;

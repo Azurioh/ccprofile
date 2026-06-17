@@ -5,14 +5,15 @@ import os from 'node:os';
 import path from 'node:path';
 import { readMarker, writeMarker } from '../src/core/marker.js';
 
-test('writeMarker stamps schema v1 and appliedAt; readMarker reads it back', () => {
+test('writeMarker stamps schema v2 and appliedAt; readMarker reads it back', () => {
   const proj = fs.mkdtempSync(path.join(os.tmpdir(), 'ccp-'));
-  writeMarker(proj, { profiles: ['web'], extraSkills: ['x'], managedPlugins: ['p'] });
+  writeMarker(proj, { profiles: ['web'], extraSkills: ['x'], managedPlugins: ['p'], managedMarketplaces: ['m'] });
   const m = readMarker(proj);
-  assert.equal(m.v, 1);
+  assert.equal(m.v, 2);
   assert.deepEqual(m.profiles, ['web']);
   assert.deepEqual(m.extraSkills, ['x']);
   assert.deepEqual(m.managedPlugins, ['p']);
+  assert.deepEqual(m.managedMarketplaces, ['m']);
   assert.match(m.appliedAt, /^\d{4}-\d{2}-\d{2}T.*Z$/);
 });
 

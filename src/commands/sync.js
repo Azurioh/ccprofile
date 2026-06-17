@@ -68,7 +68,8 @@ export function run(args) {
   writeMarker(proj, {
     profiles: marker.profiles ?? [],
     extraSkills: marker.extraSkills ?? [],
-    managedPlugins: expectedPlugins
+    managedPlugins: expectedPlugins,
+    managedMarketplaces: marker.managedMarketplaces ?? []
   });
 
   ensureGitignore(proj);

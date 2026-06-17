@@ -48,7 +48,7 @@ export function run(args) {
   const prevManaged = prev?.managedPlugins ?? [];
   const profiles = [...new Set(profileArgs)].sort();
   const managed = [...new Set([...prevManaged, ...plugins])].sort();
-  writeMarker(proj, { profiles, extraSkills: prevExtra, managedPlugins: managed });
+  writeMarker(proj, { profiles, extraSkills: prevExtra, managedPlugins: managed, managedMarketplaces: prev?.managedMarketplaces ?? [] });
 
   ensureGitignore(proj);
   info(`✓ ${ns} skills symlinkés, ${plugins.length} plugins activés → .claude/settings.json`);
