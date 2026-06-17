@@ -1,6 +1,5 @@
 // @ts-check
 import fs from 'node:fs';
-import path from 'node:path';
 import { skillsDir } from '../core/paths.js';
 import { projectDir } from '../core/project.js';
 import { readEnabledPlugins } from '../core/settings.js';
@@ -25,7 +24,7 @@ export function run(_args) {
     info('  (aucun)');
   } else {
     for (const e of entries) {
-      info(`  ${path.basename(e)}`);
+      info(`  ${e}`);
     }
   }
   info('-- plugins activés (settings.json) --');

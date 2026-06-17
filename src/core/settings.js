@@ -93,7 +93,9 @@ export function mergeMarketplaces(proj, names) {
       missing.push(name);
     }
   }
-  writeJsonAtomic(committedSettingsPath(proj), s);
+  if (added.length > 0) {
+    writeJsonAtomic(committedSettingsPath(proj), s);
+  }
   return { added: added.sort(), missing: missing.sort() };
 }
 
@@ -122,8 +124,17 @@ export function reconcileMarketplaces(proj, expected, managed) {
       missing.push(name);
     }
   }
-  s.extraKnownMarketplaces = next;
-  writeJsonAtomic(committedSettingsPath(proj), s);
+  const prevMarketplaces = JSON.stringify(s.extraKnownMarketplaces ?? {});
+  const nextIsEmpty = Object.keys(next).length === 0;
+  if (nextIsEmpty) {
+    delete s.extraKnownMarketplaces;
+  } else {
+    s.extraKnownMarketplaces = next;
+  }
+  const nextMarketplaces = JSON.stringify(s.extraKnownMarketplaces ?? {});
+  if (nextMarketplaces !== prevMarketplaces) {
+    writeJsonAtomic(committedSettingsPath(proj), s);
+  }
   return { missing: missing.sort() };
 }
 

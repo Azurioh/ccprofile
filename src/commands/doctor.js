@@ -53,6 +53,7 @@ export function run(_args) {
     }
   } catch {
     vendored = [];
+    strays = [];
   }
   info(`  ✓ ${vendored.length} skill(s) copié(s)`);
   if (strays.length > 0) {

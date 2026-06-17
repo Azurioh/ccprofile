@@ -31,3 +31,35 @@ test('vendorSkill replaces a pre-existing symlink with a real copy', () => {
   assert.equal(vendorSkill('bar', dest), true);
   assert.equal(fs.lstatSync(path.join(dest, 'bar')).isSymbolicLink(), false);
 });
+
+test('vendorSkill dereferences store symlinks — copied content survives original removal', () => {
+  // Simulates a store where the entry is itself a symlink (e.g. nextjs-developer -> ../../.agents/skills/nextjs-developer)
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cch-'));
+  process.env.CLAUDE_CONFIG_DIR = home;
+
+  // Create the real skill dir outside the store
+  const realDir = fs.mkdtempSync(path.join(os.tmpdir(), 'real-'));
+  fs.writeFileSync(path.join(realDir, 'SKILL.md'), '# symlinked skill');
+
+  // Put a symlink inside the store pointing to the real dir
+  const storeDir = path.join(home, 'skills-store');
+  fs.mkdirSync(storeDir, { recursive: true });
+  fs.symlinkSync(realDir, path.join(storeDir, 'foo'), process.platform === 'win32' ? 'junction' : 'dir');
+
+  const dest = fs.mkdtempSync(path.join(os.tmpdir(), 'dst-'));
+  assert.equal(vendorSkill('foo', dest), true);
+
+  const copied = path.join(dest, 'foo');
+
+  // Must NOT be a symlink — content was physically copied
+  assert.equal(fs.lstatSync(copied).isSymbolicLink(), false);
+  // Must be a directory
+  assert.equal(fs.statSync(copied).isDirectory(), true);
+  // Content must be readable
+  assert.equal(fs.readFileSync(path.join(copied, 'SKILL.md'), 'utf8'), '# symlinked skill');
+
+  // Remove the original target to prove it was copied, not linked
+  fs.rmSync(realDir, { recursive: true, force: true });
+  // File must still be readable from the copy
+  assert.equal(fs.readFileSync(path.join(copied, 'SKILL.md'), 'utf8'), '# symlinked skill');
+});

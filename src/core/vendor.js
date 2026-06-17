@@ -17,7 +17,7 @@ export function vendorSkill(skill, destDir) {
   }
   const dest = path.join(destDir, skill);
   fs.rmSync(dest, { recursive: true, force: true });
-  fs.cpSync(src, dest, { recursive: true });
+  fs.cpSync(src, dest, { recursive: true, dereference: true });
   return true;
 }
 
