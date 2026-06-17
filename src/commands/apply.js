@@ -51,7 +51,7 @@ export function run(args) {
   writeMarker(proj, { profiles, extraSkills: prevExtra, managedPlugins: managed });
 
   ensureGitignore(proj);
-  info(`✓ ${ns} skills symlinkés, ${plugins.length} plugins activés → .claude/settings.local.json`);
+  info(`✓ ${ns} skills symlinkés, ${plugins.length} plugins activés → .claude/settings.json`);
   info('  marqueur écrit → .claude/ccprofile.json');
   info('  (effet à la prochaine session Claude Code)');
   return 0;

@@ -26,7 +26,7 @@ export function run(_args) {
       info(`  ${path.basename(e)}`);
     }
   }
-  info('-- plugins activés (settings.local.json) --');
+  info('-- plugins activés (settings.json) --');
   const plugins = readEnabledPlugins(proj);
   if (plugins.length === 0) {
     info('  (aucun)');

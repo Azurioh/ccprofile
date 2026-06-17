@@ -22,7 +22,7 @@ test('reset removes marker, skill links, enabledPlugins', () => {
   const sdir = path.join(proj, '.claude', 'skills');
   fs.mkdirSync(sdir, { recursive: true });
   fs.symlinkSync(home, path.join(sdir, 'lnk'), process.platform === 'win32' ? 'junction' : 'dir');
-  fs.writeFileSync(path.join(proj, '.claude', 'settings.local.json'), JSON.stringify({ enabledPlugins: { x: true } }));
+  fs.writeFileSync(path.join(proj, '.claude', 'settings.json'), JSON.stringify({ enabledPlugins: { x: true } }));
   fs.writeFileSync(path.join(proj, '.claude', 'ccprofile.json'), JSON.stringify({ profiles: [], v: 1 }));
 
   const r = runCli(['reset'], { cwd: proj, configDir: home });
@@ -30,7 +30,7 @@ test('reset removes marker, skill links, enabledPlugins', () => {
   assert.equal(r.status, 0);
   assert.equal(fs.existsSync(path.join(proj, '.claude', 'ccprofile.json')), false);
   assert.equal(fs.existsSync(path.join(sdir, 'lnk')), false);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(proj, '.claude', 'settings.local.json'), 'utf8')).enabledPlugins, undefined);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(proj, '.claude', 'settings.json'), 'utf8')).enabledPlugins, undefined);
 });
 
 test('show omits broken symlinks', () => {

@@ -1,7 +1,7 @@
 // @ts-check
 import fs from 'node:fs';
 import path from 'node:path';
-import { skillsDir, markerPath, settingsPath } from '../core/paths.js';
+import { skillsDir, markerPath, committedSettingsPath } from '../core/paths.js';
 import { projectDir } from '../core/project.js';
 import { clearEnabledPlugins } from '../core/settings.js';
 import { info } from '../util/log.js';
@@ -31,9 +31,9 @@ export function run(_args) {
   if (removedAny) {
     info('✓ skills projet vidés');
   }
-  if (fs.existsSync(settingsPath(proj))) {
+  if (fs.existsSync(committedSettingsPath(proj))) {
     clearEnabledPlugins(proj);
-    info('✓ enabledPlugins retiré de settings.local.json');
+    info('✓ enabledPlugins retiré de settings.json');
   }
   if (fs.existsSync(markerPath(proj))) {
     fs.rmSync(markerPath(proj), { force: true });
