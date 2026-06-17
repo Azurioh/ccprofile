@@ -1,0 +1,19 @@
+{
+  "description": "Backend / API",
+  "extends": ["dev-common"],
+  "plugins": [
+    "typescript-lsp@claude-plugins-official"
+  ],
+  "skills": [
+    "api-designer",
+    "graphql-architect",
+    "websocket-engineer",
+    "database-optimizer",
+    "postgres-pro",
+    "sql-pro",
+    "nestjs-expert",
+    "architecture-designer",
+    "microservices-architect",
+    "mcp-developer"
+  ]
+}

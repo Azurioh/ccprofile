@@ -1,0 +1,33 @@
+{
+  "description": "Apps web frontend (React/Next/TS)",
+  "extends": ["dev-common"],
+  "plugins": [
+    "frontend-design@claude-plugins-official",
+    "ui-ux-pro-max@ui-ux-pro-max-skill",
+    "accesslint@accesslint",
+    "chrome-devtools-mcp@claude-plugins-official",
+    "playwright@claude-plugins-official",
+    "typescript-lsp@claude-plugins-official",
+    "bencium-controlled-ux-designer@bencium-marketplace",
+    "web-asset-generator@web-asset-generator-marketplace",
+    "impeccable@impeccable"
+  ],
+  "skills": [
+    "ui-ux-pro-max",
+    "frontend-design",
+    "typescript-pro",
+    "javascript-pro",
+    "react-expert",
+    "nextjs-developer",
+    "nestjs-expert",
+    "shadcn",
+    "web-design-guidelines",
+    "image",
+    "playwright-expert",
+    "vercel-cli-with-tokens",
+    "vercel-composition-patterns",
+    "vercel-react-best-practices",
+    "deploy-to-vercel",
+    "design-taste-frontend"
+  ]
+}
