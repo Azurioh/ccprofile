@@ -1,0 +1,5 @@
+test/
+docs/
+.git/
+.gitignore
+eslint.config.js

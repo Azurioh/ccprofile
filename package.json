@@ -1,0 +1,33 @@
+{
+  "name": "@azurioh/ccprofile",
+  "version": "1.0.0",
+  "description": "Per-project Claude Code plugins + skills profiles. Global stays core-minimal.",
+  "type": "module",
+  "bin": {
+    "ccprofile": "bin/ccprofile.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "src",
+    "profiles"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint ."
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azurioh/ccprofile.git"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.5.0"
+  }
+}
