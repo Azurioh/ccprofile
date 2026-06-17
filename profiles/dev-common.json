@@ -1,0 +1,20 @@
+{
+  "description": "Bloc qualité code partagé par tout profil de dev",
+  "plugins": [
+    "code-review@claude-plugins-official",
+    "code-simplifier@claude-plugins-official",
+    "feature-dev@claude-plugins-official",
+    "ruflo-core@ruflo"
+  ],
+  "skills": [
+    "code-reviewer",
+    "test-master",
+    "security-reviewer",
+    "secure-code-guardian",
+    "code-documenter",
+    "feature-forge",
+    "spec-miner",
+    "legacy-modernizer",
+    "fullstack-guardian"
+  ]
+}

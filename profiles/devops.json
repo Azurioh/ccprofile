@@ -1,0 +1,14 @@
+{
+  "description": "DevOps / infra",
+  "extends": ["dev-common"],
+  "plugins": [],
+  "skills": [
+    "devops-engineer",
+    "kubernetes-specialist",
+    "terraform-engineer",
+    "cloud-architect",
+    "sre-engineer",
+    "monitoring-expert",
+    "chaos-engineer"
+  ]
+}

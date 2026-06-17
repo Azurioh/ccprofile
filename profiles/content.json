@@ -1,0 +1,11 @@
+{
+  "description": "Production de contenu / assets visuels",
+  "plugins": [
+    "web-asset-generator@web-asset-generator-marketplace"
+  ],
+  "skills": [
+    "video",
+    "remotion-best-practices",
+    "image"
+  ]
+}

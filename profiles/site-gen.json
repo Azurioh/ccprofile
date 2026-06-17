@@ -1,0 +1,16 @@
+{
+  "description": "Génération de sites web : design intelligence, esthétique anti-AI-slop, audit a11y/perf/UX, perf React, tests navigateur, scraping de références",
+  "extends": ["dev-common"],
+  "plugins": [
+    "frontend-design@claude-plugins-official",
+    "ui-ux-pro-max@ui-ux-pro-max-skill"
+  ],
+  "skills": [
+    "ui-ux-pro-max",
+    "frontend-design",
+    "web-design-guidelines",
+    "vercel-react-best-practices",
+    "webapp-testing",
+    "firecrawl"
+  ]
+}

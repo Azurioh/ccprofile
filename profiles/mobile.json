@@ -1,0 +1,15 @@
+{
+  "description": "Mobile (React Native / Flutter / Swift)",
+  "extends": ["dev-common"],
+  "plugins": [
+    "swift-lsp@claude-plugins-official",
+    "ui-ux-pro-max@ui-ux-pro-max-skill"
+  ],
+  "skills": [
+    "react-native-expert",
+    "vercel-react-native-skills",
+    "flutter-expert",
+    "swift-expert",
+    "ios-simulator-skill"
+  ]
+}

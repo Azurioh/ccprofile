@@ -1,0 +1,27 @@
+name: Cross-platform tests
+
+# ccprofile must run natively on Windows, macOS, and Linux. This matrix proves
+# the zero-dependency CLI — including junction-based skill links on Windows —
+# works on every supported OS and Node version. The test suite imports only the
+# Node standard library and the project's own src/, so no dependency install is
+# required (the org code-quality workflow covers lint + pnpm install separately).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 20, 22]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node --test

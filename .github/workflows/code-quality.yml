@@ -1,0 +1,17 @@
+# Example caller — drop this in <your-repo>/.github/workflows/code-quality.yml
+name: Code Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    uses: azu-development/ci-templates/.github/workflows/code-quality.yml@main
+    with:
+      node_version: "20"
+      pnpm_version: "9"
+      run_build: false # ccprofile is plain ESM — no build step
+      # lint_command: "pnpm run lint"   # default
+      # test_command: "pnpm run test"   # default (node --test)

@@ -1,0 +1,13 @@
+{
+  "description": "Data / ML",
+  "extends": ["dev-common"],
+  "plugins": [],
+  "skills": [
+    "python-pro",
+    "pandas-pro",
+    "ml-pipeline",
+    "rag-architect",
+    "fine-tuning-expert",
+    "spark-engineer"
+  ]
+}
