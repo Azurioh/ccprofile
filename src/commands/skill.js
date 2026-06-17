@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import { skillsDir } from '../core/paths.js';
 import { projectDir } from '../core/project.js';
-import { linkSkill } from '../core/links.js';
+import { vendorSkill } from '../core/vendor.js';
 import { ensureGitignore } from '../core/gitignore.js';
 import { readMarker, writeMarker } from '../core/marker.js';
 import { info, die } from '../util/log.js';
@@ -19,7 +19,7 @@ export function run(args) {
 
   let ok = 0;
   for (const s of args) {
-    if (linkSkill(s, dest)) {
+    if (vendorSkill(s, dest)) {
       ok += 1;
     }
   }
