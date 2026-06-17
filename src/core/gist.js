@@ -69,9 +69,11 @@ export async function createGist(opts) {
 export async function fetchGist(idOrUrl) {
   const id = idOrUrl.replace(/^https?:\/\/gist\.github\.com\/[^/]+\//, '').replace(/^https?:\/\/gist\.github\.com\//, '').replace(/\/$/, '');
   if (hasGh()) {
-    const r = spawnSync('gh', ['gist', 'view', id, '--raw'], { encoding: 'utf8' });
+    // `gh gist view --raw` prepends the gist description; use the API to get
+    // the first file's pure content instead.
+    const r = spawnSync('gh', ['api', `gists/${id}`, '--jq', '.files | to_entries[0].value.content'], { encoding: 'utf8' });
     if (r.status !== 0) {
-      die(`gh gist view a échoué: ${(r.stderr || '').trim()}`);
+      die(`gh api gists a échoué: ${(r.stderr || '').trim()}`);
     }
     return r.stdout;
   }
