@@ -25,7 +25,7 @@ export function run(args) {
   }
 
   const prev = readMarker(proj);
-  const extra = [...new Set([...(prev?.extraSkills ?? []), ...args])];
+  const extra = [...new Set([...(prev?.extraSkills ?? []), ...args])].sort();
   if (prev) {
     writeMarker(proj, {
       profiles: prev.profiles ?? [],

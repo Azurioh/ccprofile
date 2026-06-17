@@ -15,7 +15,7 @@ export function run(args) {
   if (!fs.existsSync(file)) {
     die(`profil inconnu: ${name} (${file} absent)`);
   }
-  const prof = readJson(file, {}) ?? {};
+  const prof = readJson(file, {});
   const ownPlugins = new Set(prof.plugins ?? []);
   const ownSkills = new Set(prof.skills ?? []);
   const { plugins, skills } = resolveProfiles([name]);

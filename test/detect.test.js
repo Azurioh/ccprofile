@@ -23,3 +23,15 @@ test('no signals yields empty recommended', () => {
   const out = detect(root);
   assert.deepEqual(out.recommended, []);
 });
+
+test('tied profiles appear in ascending name order in recommended', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ccp-'));
+  // Dockerfile triggers devops; metro.config.js triggers mobile — each 1 signal → tie
+  fs.writeFileSync(path.join(root, 'Dockerfile'), 'FROM node');
+  fs.writeFileSync(path.join(root, 'metro.config.js'), '');
+  const out = detect(root);
+  // Both should appear with score 1, recommended in ascending order
+  assert.ok(out.recommended.length >= 2);
+  const sorted = [...out.recommended].sort();
+  assert.deepEqual(out.recommended, sorted);
+});

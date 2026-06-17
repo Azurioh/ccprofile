@@ -36,8 +36,8 @@ export function run(args) {
   const prev = readMarker(proj);
   const prevExtra = prev?.extraSkills ?? [];
   const prevManaged = prev?.managedPlugins ?? [];
-  const profiles = [...new Set(args)];
-  const managed = [...new Set([...prevManaged, ...plugins])];
+  const profiles = [...new Set(args)].sort();
+  const managed = [...new Set([...prevManaged, ...plugins])].sort();
   writeMarker(proj, { profiles, extraSkills: prevExtra, managedPlugins: managed });
 
   ensureGitignore(proj);

@@ -28,7 +28,7 @@ export function collectSignals(proj) {
   const deps = new Set();
   for (const f of walk(proj, { maxDepth: MAX_DEPTH })) {
     if (path.basename(f) === 'package.json') {
-      const pkg = readJson(f, {}) ?? {};
+      const pkg = readJson(f, {});
       for (const k of Object.keys({ ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) })) {
         deps.add(k);
       }
@@ -86,11 +86,13 @@ export function detect(proj) {
     byProfile.get(profile).add(signal);
   }
   const candidates = [...byProfile.entries()]
-    .map(([profile, set]) => ({ profile, score: set.size, signals: [...set] }))
-    .sort((a, b) => b.score - a.score);
+    .map(([profile, set]) => ({ profile, score: set.size, signals: [...set].sort() }))
+    .sort((a, b) => b.score - a.score || a.profile.localeCompare(b.profile));
 
   const maxScore = candidates.length ? candidates[0].score : 0;
-  const recommended = maxScore === 0 ? [] : candidates.filter((c) => c.score === maxScore).map((c) => c.profile);
+  const recommended = maxScore === 0 ? [] : candidates
+    .filter((c) => c.score === maxScore)
+    .map((c) => c.profile);
 
   const marker = readMarker(proj);
   const applied = marker?.profiles ?? [];

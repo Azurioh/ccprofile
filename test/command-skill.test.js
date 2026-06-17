@@ -18,3 +18,18 @@ test('skill links à-la-carte and records in extraSkills', async () => {
   assert.equal(code, 0);
   assert.deepEqual(readMarker(proj).extraSkills, ['golang-pro']);
 });
+
+test('skill append yields sorted extraSkills', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cch-'));
+  process.env.CLAUDE_CONFIG_DIR = home;
+  fs.mkdirSync(path.join(home, 'skills-store', 'zeta-skill'), { recursive: true });
+  fs.mkdirSync(path.join(home, 'skills-store', 'alpha-skill'), { recursive: true });
+  const proj = fs.mkdtempSync(path.join(os.tmpdir(), 'ccp-'));
+  const cwd = process.cwd();
+  process.chdir(proj);
+  const skill = await import('../src/commands/skill.js?v2');
+  await skill.run(['zeta-skill']);
+  await skill.run(['alpha-skill']);
+  process.chdir(cwd);
+  assert.deepEqual(readMarker(proj).extraSkills, ['alpha-skill', 'zeta-skill']);
+});

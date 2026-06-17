@@ -1,10 +1,9 @@
 // @ts-check
 import fs from 'node:fs';
 import path from 'node:path';
-import { skillsDir, markerPath } from '../core/paths.js';
+import { skillsDir, markerPath, settingsPath } from '../core/paths.js';
 import { projectDir } from '../core/project.js';
 import { clearEnabledPlugins } from '../core/settings.js';
-import { settingsPath } from '../core/paths.js';
 import { info } from '../util/log.js';
 
 /** @param {string[]} _args */

@@ -21,7 +21,7 @@ export function run(_args) {
   }
   for (const f of files) {
     const n = path.basename(f, '.json');
-    const prof = readJson(path.join(dir, f), {}) ?? {};
+    const prof = readJson(path.join(dir, f), {});
     const np = (prof.plugins ?? []).length;
     const ns = (prof.skills ?? []).length;
     const ext = (prof.extends ?? []).length > 0 ? ` + ${prof.extends.join(',')}` : '';

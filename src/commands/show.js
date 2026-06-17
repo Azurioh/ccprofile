@@ -18,10 +18,11 @@ export function run(_args) {
   } catch {
     entries = [];
   }
-  if (entries.length === 0) {
+  const visible = entries.filter((e) => fs.existsSync(path.join(dir, e)));
+  if (visible.length === 0) {
     info('  (aucun)');
   } else {
-    for (const e of entries) {
+    for (const e of visible) {
       info(`  ${path.basename(e)}`);
     }
   }

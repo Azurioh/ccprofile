@@ -4,7 +4,7 @@ import { readJson, writeJsonAtomic } from './json.js';
 
 /** @param {string} proj */
 function load(proj) {
-  return readJson(settingsPath(proj), {}) ?? {};
+  return readJson(settingsPath(proj), {});
 }
 
 /** @param {string} proj */
