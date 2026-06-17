@@ -28,7 +28,7 @@ export function run(_args) {
     profFiles = [];
   }
   for (const f of profFiles.sort()) {
-    const obj = readJson(path.join(profilesDir(), f), {}) ?? {};
+    const obj = readJson(path.join(profilesDir(), f), {});
     const missing = (obj.skills ?? []).filter((s) => !store.has(s));
     if (missing.length > 0) {
       problems += missing.length;

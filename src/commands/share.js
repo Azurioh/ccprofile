@@ -11,7 +11,7 @@ import { info, die } from '../util/log.js';
  * @param {string[]} args
  * @returns {Promise<number>}
  */
-export function run(args) {
+export async function run(args) {
   const all = args.includes('--all');
   const resolved = args.includes('--resolved');
   const positional = args.filter((a) => !a.startsWith('--'));
@@ -30,7 +30,7 @@ export function run(args) {
       files = [];
     }
     for (const f of files.sort()) {
-      const body = readJson(path.join(profilesDir(), f), {}) ?? {};
+      const body = readJson(path.join(profilesDir(), f), {});
       delete body.meta;
       map[path.basename(f, '.json')] = body;
     }
@@ -55,12 +55,11 @@ export function run(args) {
     label = `profil '${name}'`;
   }
 
-  return createGist({ filename, content, description: `ccprofile — ${label}`, public: true }).then((url) => {
-    info(`✓ ${label} partagé`);
-    info(`  ${url}`);
-    info(`  → import: ccprofile pull ${url}`);
-    return 0;
-  });
+  const url = await createGist({ filename, content, description: `ccprofile — ${label}`, public: true });
+  info(`✓ ${label} partagé`);
+  info(`  ${url}`);
+  info(`  → import: ccprofile pull ${url}`);
+  return 0;
 }
 
 /** @param {object} obj */

@@ -22,28 +22,43 @@ export async function createGist(opts) {
   if (hasGh()) {
     const tmp = path.join(os.tmpdir(), `ccprofile-${process.pid}-${filename}`);
     fs.writeFileSync(tmp, content);
-    const ghArgs = ['gist', 'create', tmp, '--desc', description];
-    if (pub) {
-      ghArgs.push('--public');
+    try {
+      const ghArgs = ['gist', 'create', tmp, '--desc', description];
+      if (pub) {
+        ghArgs.push('--public');
+      }
+      const r = spawnSync('gh', ghArgs, { encoding: 'utf8' });
+      if (r.status !== 0) {
+        die(`gh gist create a échoué: ${(r.stderr || '').trim()}`);
+      }
+      return r.stdout.trim();
+    } finally {
+      fs.rmSync(tmp, { force: true });
     }
-    const r = spawnSync('gh', ghArgs, { encoding: 'utf8' });
-    if (r.status !== 0) {
-      die(`gh gist create a échoué: ${(r.stderr || '').trim()}`);
-    }
-    return r.stdout.trim();
   }
   if (!token()) {
     die('partage impossible: installe `gh` (gh auth login) ou définis GH_TOKEN');
   }
-  const res = await fetch('https://api.github.com/gists', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token()}`, Accept: 'application/vnd.github+json' },
-    body: JSON.stringify({ description, public: pub, files: { [filename]: { content } } })
-  });
+  const tok = token();
+  let res;
+  try {
+    res = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${tok}`, Accept: 'application/vnd.github+json' },
+      body: JSON.stringify({ description, public: pub, files: { [filename]: { content } } })
+    });
+  } catch (e) {
+    die(`gist: échec réseau (${/** @type {Error} */ (e).message})`);
+  }
   if (!res.ok) {
     die(`création du gist échouée (${res.status})`);
   }
-  const json = await res.json();
+  let json;
+  try {
+    json = await res.json();
+  } catch (e) {
+    die(`gist: échec réseau (${/** @type {Error} */ (e).message})`);
+  }
   return json.html_url;
 }
 
@@ -60,15 +75,26 @@ export async function fetchGist(idOrUrl) {
     }
     return r.stdout;
   }
+  const tok = token();
   const headers = { Accept: 'application/vnd.github+json' };
-  if (token()) {
-    headers.Authorization = `Bearer ${token()}`;
+  if (tok) {
+    headers.Authorization = `Bearer ${tok}`;
   }
-  const res = await fetch(`https://api.github.com/gists/${id}`, { headers });
+  let res;
+  try {
+    res = await fetch(`https://api.github.com/gists/${id}`, { headers });
+  } catch (e) {
+    die(`gist: échec réseau (${/** @type {Error} */ (e).message})`);
+  }
   if (!res.ok) {
     die(`récupération du gist échouée (${res.status})`);
   }
-  const json = await res.json();
+  let json;
+  try {
+    json = await res.json();
+  } catch (e) {
+    die(`gist: échec réseau (${/** @type {Error} */ (e).message})`);
+  }
   const files = Object.values(json.files ?? {});
   if (files.length === 0) {
     die('gist vide');
