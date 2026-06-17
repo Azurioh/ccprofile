@@ -1,5 +1,9 @@
-# Example caller — drop this in <your-repo>/.github/workflows/code-quality.yml
 name: Code Quality
+
+# Self-contained lint + test on Ubuntu. (The org reusable workflow
+# azu-development/ci-templates is private and cross-owner, so it cannot be
+# called from this public repo. If ci-templates is made public or granted
+# Actions access to this repo, this can be replaced by the org caller.)
 
 on:
   push:
@@ -8,10 +12,16 @@ on:
 
 jobs:
   quality:
-    uses: azu-development/ci-templates/.github/workflows/code-quality.yml@main
-    with:
-      node_version: "20"
-      pnpm_version: "9"
-      run_build: false # ccprofile is plain ESM — no build step
-      # lint_command: "pnpm run lint"   # default
-      # test_command: "pnpm run test"   # default (node --test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: node --test
