@@ -15,6 +15,7 @@ import * as diff from './commands/diff.js';
 import * as doctor from './commands/doctor.js';
 import * as init from './commands/init.js';
 import * as upgrade from './commands/upgrade.js';
+import * as exportCmd from './commands/export.js';
 
 const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = core minimal)
 
@@ -82,6 +83,8 @@ export async function run(argv) {
         return await init.run(rest);
       case 'upgrade':
         return upgrade.run(rest);
+      case 'export':
+        return await exportCmd.run(rest);
       default:
         throw new CcprofileError(`commande inconnue: ${cmd} (voir: ccprofile help)`);
     }
