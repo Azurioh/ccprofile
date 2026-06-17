@@ -2,6 +2,7 @@
 import { CcprofileError } from './util/log.js';
 import * as list from './commands/list.js';
 import * as inspect from './commands/inspect.js';
+import * as detect from './commands/detect.js';
 
 const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = core minimal)
 
@@ -40,6 +41,8 @@ export async function run(argv) {
         return 0;
       case 'list':
         return await list.run(rest);
+      case 'detect':
+        return await detect.run(rest);
       case 'inspect':
         return await inspect.run(rest);
       default:
