@@ -3,10 +3,21 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-test('reset removes marker, skill links, enabledPlugins', async () => {
+const BIN = fileURLToPath(new URL('../bin/ccprofile.js', import.meta.url));
+
+function runCli(args, { cwd, configDir }) {
+  return spawnSync(process.execPath, [BIN, ...args], {
+    cwd,
+    encoding: 'utf8',
+    env: { ...process.env, CLAUDE_CONFIG_DIR: configDir }
+  });
+}
+
+test('reset removes marker, skill links, enabledPlugins', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cch-'));
-  process.env.CLAUDE_CONFIG_DIR = home;
   const proj = fs.mkdtempSync(path.join(os.tmpdir(), 'ccp-'));
   const sdir = path.join(proj, '.claude', 'skills');
   fs.mkdirSync(sdir, { recursive: true });
@@ -14,21 +25,16 @@ test('reset removes marker, skill links, enabledPlugins', async () => {
   fs.writeFileSync(path.join(proj, '.claude', 'settings.local.json'), JSON.stringify({ enabledPlugins: { x: true } }));
   fs.writeFileSync(path.join(proj, '.claude', 'ccprofile.json'), JSON.stringify({ profiles: [], v: 1 }));
 
-  const cwd = process.cwd();
-  process.chdir(proj);
-  const reset = await import('../src/commands/reset.js');
-  const code = await reset.run([]);
-  process.chdir(cwd);
+  const r = runCli(['reset'], { cwd: proj, configDir: home });
 
-  assert.equal(code, 0);
+  assert.equal(r.status, 0);
   assert.equal(fs.existsSync(path.join(proj, '.claude', 'ccprofile.json')), false);
   assert.equal(fs.existsSync(path.join(sdir, 'lnk')), false);
   assert.equal(JSON.parse(fs.readFileSync(path.join(proj, '.claude', 'settings.local.json'), 'utf8')).enabledPlugins, undefined);
 });
 
-test('show omits broken symlinks', async () => {
+test('show omits broken symlinks', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cch-'));
-  process.env.CLAUDE_CONFIG_DIR = home;
   const proj = fs.mkdtempSync(path.join(os.tmpdir(), 'ccp-'));
   const sdir = path.join(proj, '.claude', 'skills');
   fs.mkdirSync(sdir, { recursive: true });
@@ -40,34 +46,19 @@ test('show omits broken symlinks', async () => {
   const missing = path.join(home, 'skills-store', 'gone-skill');
   fs.symlinkSync(missing, path.join(sdir, 'gone-skill'), process.platform === 'win32' ? 'junction' : 'dir');
 
-  const cwd = process.cwd();
-  process.chdir(proj);
-  const out = [];
-  const orig = process.stdout.write.bind(process.stdout);
-  process.stdout.write = (s) => { out.push(s); return true; };
-  const show = await import('../src/commands/show.js?broken');
-  await show.run([]);
-  process.stdout.write = orig;
-  process.chdir(cwd);
+  const r = runCli(['show'], { cwd: proj, configDir: home });
 
-  const combined = out.join('');
+  const combined = r.stdout;
   assert.ok(combined.includes('good-skill'), 'good-skill should appear');
   assert.ok(!combined.includes('gone-skill'), 'gone-skill (broken) should NOT appear');
 });
 
-test('hint is silent and returns 0 when no marker and no signals', async () => {
+test('hint is silent and returns 0 when no marker and no signals', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cch-'));
-  process.env.CLAUDE_CONFIG_DIR = home;
   const proj = fs.mkdtempSync(path.join(os.tmpdir(), 'ccp-'));
-  const cwd = process.cwd();
-  process.chdir(proj);
-  const out = [];
-  const orig = process.stdout.write.bind(process.stdout);
-  process.stdout.write = (s) => { out.push(s); return true; };
-  const hint = await import('../src/commands/hint.js');
-  const code = await hint.run([]);
-  process.stdout.write = orig;
-  process.chdir(cwd);
-  assert.equal(code, 0);
-  assert.equal(out.join(''), '');
+
+  const r = runCli(['hint'], { cwd: proj, configDir: home });
+
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout.trim(), '');
 });
