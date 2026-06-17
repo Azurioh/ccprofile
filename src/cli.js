@@ -22,6 +22,7 @@ const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = cor
   ccprofile verify [--json]       vérifie la dérive : projet vs définition courante du profil
   ccprofile sync                  réconcilie le projet sur la définition courante du profil
   ccprofile inspect <profil>      détaille plugins + skills d'un profil (avec extends)
+  ccprofile diff <pA> <pB>        compare deux profils (plugins + skills)
   ccprofile show                  état du projet courant
   ccprofile hint                  ligne unique pour hook SessionStart (silencieux si à jour)
   ccprofile reset                 vide skills + plugins + marqueur du projet courant

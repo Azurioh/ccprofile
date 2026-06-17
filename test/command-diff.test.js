@@ -17,3 +17,25 @@ test('diff runs for two existing profiles (exit 0)', () => {
   fs.writeFileSync(path.join(home, 'profiles', 'b.json'), JSON.stringify({ plugins: ['p1', 'p2'], skills: [] }));
   assert.equal(diff.run(['a', 'b']), 0);
 });
+
+test('diff prints (identiques) for matching profiles', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cch-'));
+  process.env.CLAUDE_CONFIG_DIR = home;
+  fs.mkdirSync(path.join(home, 'profiles'), { recursive: true });
+  fs.writeFileSync(path.join(home, 'profiles', 'a.json'), JSON.stringify({ plugins: ['p1'], skills: ['s1'] }));
+  fs.writeFileSync(path.join(home, 'profiles', 'b.json'), JSON.stringify({ plugins: ['p1'], skills: ['s1'] }));
+
+  const lines = [];
+  const orig = process.stdout.write;
+  process.stdout.write = (chunk) => {
+    lines.push(String(chunk));
+    return true;
+  };
+  try {
+    assert.equal(diff.run(['a', 'b']), 0);
+  } finally {
+    process.stdout.write = orig;
+  }
+  const identiques = lines.filter((l) => l.includes('(identiques)'));
+  assert.equal(identiques.length, 2);
+});
