@@ -5,7 +5,6 @@ import { spawnSync } from 'node:child_process';
 import { profilesDir, storeDir, skillsDir } from '../core/paths.js';
 import { readJson } from '../core/json.js';
 import { projectDir } from '../core/project.js';
-import { isBrokenLink } from '../core/links.js';
 import { info } from '../util/log.js';
 
 /** @param {string[]} _args */
@@ -39,20 +38,27 @@ export function run(_args) {
     info('  (aucun profil — lance: ccprofile init)');
   }
 
-  info('-- liens projet courant --');
+  info('-- skills vendorés (projet courant) --');
   const proj = projectDir();
-  const dir = skillsDir(proj);
-  let broken = [];
+  const sdir = skillsDir(proj);
+  let vendored = [];
+  let strays = [];
   try {
-    broken = fs.readdirSync(dir).filter((b) => isBrokenLink(path.join(dir, b))).sort();
+    for (const e of fs.readdirSync(sdir, { withFileTypes: true })) {
+      if (e.isDirectory()) {
+        vendored.push(e.name);
+      } else {
+        strays.push(e.name);
+      }
+    }
   } catch {
-    broken = [];
+    vendored = [];
+    strays = [];
   }
-  if (broken.length > 0) {
-    problems += broken.length;
-    info(`  ⚠ symlinks cassés: ${broken.join(', ')} (lance: ccprofile sync)`);
-  } else {
-    info('  ✓ aucun lien cassé');
+  info(`  ✓ ${vendored.length} skill(s) copié(s)`);
+  if (strays.length > 0) {
+    problems += strays.length;
+    info(`  ⚠ entrées non-dossier dans .claude/skills: ${strays.sort().join(', ')}`);
   }
 
   info('-- environnement --');

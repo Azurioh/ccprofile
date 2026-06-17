@@ -26,8 +26,7 @@ export function run(args) {
       missingSkills: d.missingSkills,
       extraSkills: d.extraSkills,
       missingPlugins: d.missingPlugins,
-      stalePlugins: d.stalePlugins,
-      broken: d.broken
+      stalePlugins: d.stalePlugins
     }));
   } else if (d.count === 0) {
     info(`✓ ccprofile: projet à jour avec '${(marker.profiles ?? []).join(' ')}'`);
@@ -37,7 +36,6 @@ export function run(args) {
     printList('skills en trop (profil réduit / orphelins)', d.extraSkills);
     printList('plugins manquants', d.missingPlugins);
     printList('plugins obsolètes', d.stalePlugins);
-    printList('symlinks cassés (skill retiré du store)', d.broken);
     info('  → lance: ccprofile sync');
   }
   return d.count === 0 ? 0 : 1;

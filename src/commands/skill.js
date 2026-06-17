@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import { skillsDir } from '../core/paths.js';
 import { projectDir } from '../core/project.js';
-import { linkSkill } from '../core/links.js';
+import { vendorSkill } from '../core/vendor.js';
 import { ensureGitignore } from '../core/gitignore.js';
 import { readMarker, writeMarker } from '../core/marker.js';
 import { info, die } from '../util/log.js';
@@ -19,7 +19,7 @@ export function run(args) {
 
   let ok = 0;
   for (const s of args) {
-    if (linkSkill(s, dest)) {
+    if (vendorSkill(s, dest)) {
       ok += 1;
     }
   }
@@ -30,10 +30,11 @@ export function run(args) {
     writeMarker(proj, {
       profiles: prev.profiles ?? [],
       extraSkills: extra,
-      managedPlugins: prev.managedPlugins ?? []
+      managedPlugins: prev.managedPlugins ?? [],
+      managedMarketplaces: prev.managedMarketplaces ?? []
     });
   } else {
-    writeMarker(proj, { profiles: [], extraSkills: extra, managedPlugins: [] });
+    writeMarker(proj, { profiles: [], extraSkills: extra, managedPlugins: [], managedMarketplaces: [] });
   }
   info(`✓ ${ok} skill(s) ajouté(s) → ${dest} (suivi dans .claude/ccprofile.json)`);
   return 0;

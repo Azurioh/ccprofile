@@ -2,7 +2,7 @@
 
 > Per-project [Claude Code](https://claude.com/claude-code) plugins & skills profiles — keep your global config core-minimal, opt each project into the tooling it actually needs.
 
-`ccprofile` is a zero-dependency, cross-platform (Windows / macOS / Linux) CLI. Instead of enabling every plugin and skill globally, you define reusable **profiles** (`web`, `backend`, `mobile`, …) and apply them per project. Skills are symlinked from a local master store into the project's `.claude/skills/`; plugins are enabled in the project's `.claude/settings.local.json`. A project marker (`.claude/ccprofile.json`) records what was applied so drift can be detected and reconciled.
+`ccprofile` is a zero-dependency, cross-platform (Windows / macOS / Linux) CLI. Instead of enabling every plugin and skill globally, you define reusable **profiles** (`web`, `backend`, `mobile`, …) and apply them per project. Skills are **copied** from a local master store into the project's `.claude/skills/`; plugins and marketplace registrations are written into the project's committed `.claude/settings.json`. Both `.claude/skills/` and `.claude/settings.json` are committed to the repository, so the project is portable: any teammate or cloud container gets skills auto-loaded and plugins auto-enabled straight from the repo — no extra setup step. `.claude/settings.local.json` stays gitignored for machine-local overrides. A project marker (`.claude/ccprofile.json`) records what was applied so drift can be detected and reconciled.
 
 ## Install
 
@@ -27,7 +27,7 @@ Requires Node.js ≥ 18. No runtime dependencies.
 
 ```sh
 ccprofile detect        # what profile fits this project?
-ccprofile apply web     # symlink its skills + enable its plugins
+ccprofile apply web     # copy its skills + write plugins to committed settings
 ccprofile show          # what's active in this project
 ccprofile verify        # is the project still in sync with the profile?
 ccprofile sync          # reconcile after a profile changed
@@ -52,7 +52,7 @@ Changes take effect on the next Claude Code session.
 | `ccprofile init [--force]` | Copy the default bundled profiles into `~/.claude/profiles/`. Use `--force` to overwrite existing profiles. |
 | `ccprofile validate <profile>` | Validate a profile against the schema, checking all referenced skills and plugins exist. |
 | `ccprofile diff <a> <b>` | Compare two profiles side-by-side (resolved plugins + skills). |
-| `ccprofile doctor` | Run a health diagnostic: profiles directory, broken symlinks, environment checks. |
+| `ccprofile doctor` | Run a health diagnostic: profiles directory, vendored skills integrity, environment checks. |
 | `ccprofile export <profile> [--resolved] [--out <file>]` | Export a profile to JSON. Use `--resolved` to inline inherited plugins/skills; `--out` to write to a file. |
 | `ccprofile import <file\|url>` | Import a profile or bundle from a local file or URL. |
 | `ccprofile share <profile> [--resolved] \| --all` | Publish a profile (or all profiles) to a GitHub Gist and print the URL. Requires `gh` CLI or `GH_TOKEN`. |
@@ -73,8 +73,8 @@ Profiles live in `~/.claude/profiles/*.json`:
 ```
 
 - `extends` — inherit plugins + skills from other profiles (resolved depth-first, deduplicated, cycle-safe).
-- `plugins` — Claude Code plugin identifiers to enable.
-- `skills` — skill directory names to symlink from the skills store (`~/.claude/skills-store`).
+- `plugins` — Claude Code plugin identifiers to enable (written to the committed `.claude/settings.json`).
+- `skills` — skill directory names to copy from the skills store (`~/.claude/skills-store`) into `.claude/skills/` (committed).
 
 The store and profiles can be overridden by setting `CLAUDE_CONFIG_DIR`.
 
@@ -130,7 +130,7 @@ Surface drift (or a profile suggestion) automatically at the start of each Claud
 
 ## Windows
 
-Fully supported. Directory links use **junctions** on Windows, so no Administrator rights or Developer Mode are required. Paths, the home directory, and the optional `CLAUDE_CONFIG_DIR` override all resolve natively.
+Fully supported. Skills are copied as plain directories — no symlinks, no junctions, no elevated permissions required. Paths, the home directory, and the optional `CLAUDE_CONFIG_DIR` override all resolve natively.
 
 ## License
 

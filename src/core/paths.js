@@ -27,3 +27,10 @@ export function skillsDir(proj) {
 export function settingsPath(proj) {
   return path.join(proj, '.claude', 'settings.local.json');
 }
+/** @param {string} proj */
+export function committedSettingsPath(proj) {
+  return path.join(proj, '.claude', 'settings.json');
+}
+export function globalSettingsPath() {
+  return path.join(claudeDir(), 'settings.json');
+}

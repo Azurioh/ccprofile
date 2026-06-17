@@ -9,14 +9,15 @@ export function readMarker(proj) {
 
 /**
  * @param {string} proj
- * @param {{ profiles: string[], extraSkills: string[], managedPlugins: string[] }} data
+ * @param {{ profiles: string[], extraSkills: string[], managedPlugins: string[], managedMarketplaces: string[] }} data
  */
-export function writeMarker(proj, { profiles, extraSkills, managedPlugins }) {
+export function writeMarker(proj, { profiles, extraSkills, managedPlugins, managedMarketplaces }) {
   writeJsonAtomic(markerPath(proj), {
     profiles,
     extraSkills,
     managedPlugins,
+    managedMarketplaces,
     appliedAt: new Date().toISOString(),
-    v: 1
+    v: 2
   });
 }

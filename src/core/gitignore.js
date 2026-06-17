@@ -2,7 +2,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const ENTRIES = ['.claude/skills/', '.claude/settings.local.json'];
+const KEEP = '.claude/settings.local.json';
+const REMOVE = '.claude/skills/';
 
 /** @param {string} proj */
 export function ensureGitignore(proj) {
@@ -13,11 +14,21 @@ export function ensureGitignore(proj) {
   } catch {
     existing = '';
   }
-  const present = new Set(existing.split('\n').map((l) => l.trim()));
-  const toAdd = ENTRIES.filter((e) => !present.has(e));
-  if (toAdd.length === 0) {
-    return;
+  const lines = existing.split('\n');
+  // Drop any stale `.claude/skills/` ignore so vendored skills are committed.
+  const filtered = lines.filter((l) => l.trim() !== REMOVE);
+  const present = new Set(filtered.map((l) => l.trim()));
+  if (!present.has(KEEP)) {
+    if (filtered.length > 0 && filtered[filtered.length - 1] !== '') {
+      filtered.push('');
+    }
+    filtered.push(KEEP);
   }
-  const prefix = existing && !existing.endsWith('\n') ? '\n' : '';
-  fs.appendFileSync(gi, `${prefix}${toAdd.join('\n')}\n`);
+  let out = filtered.join('\n');
+  if (out !== '' && !out.endsWith('\n')) {
+    out += '\n';
+  }
+  if (out !== existing) {
+    fs.writeFileSync(gi, out);
+  }
 }

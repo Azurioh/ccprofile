@@ -1,9 +1,10 @@
 // @ts-check
 import fs from 'node:fs';
 import path from 'node:path';
-import { skillsDir, markerPath, settingsPath } from '../core/paths.js';
+import { skillsDir, markerPath, committedSettingsPath } from '../core/paths.js';
 import { projectDir } from '../core/project.js';
-import { clearEnabledPlugins } from '../core/settings.js';
+import { readMarker } from '../core/marker.js';
+import { clearEnabledPlugins, clearMarketplaces } from '../core/settings.js';
 import { info } from '../util/log.js';
 
 /** @param {string[]} _args */
@@ -18,22 +19,17 @@ export function run(_args) {
   }
   let removedAny = false;
   for (const base of entries) {
-    const full = path.join(dir, base);
-    try {
-      if (fs.lstatSync(full).isSymbolicLink()) {
-        fs.rmSync(full, { force: true });
-        removedAny = true;
-      }
-    } catch {
-      /* ignore */
-    }
+    fs.rmSync(path.join(dir, base), { recursive: true, force: true });
+    removedAny = true;
   }
   if (removedAny) {
     info('✓ skills projet vidés');
   }
-  if (fs.existsSync(settingsPath(proj))) {
+  if (fs.existsSync(committedSettingsPath(proj))) {
+    const marker = readMarker(proj);
     clearEnabledPlugins(proj);
-    info('✓ enabledPlugins retiré de settings.local.json');
+    clearMarketplaces(proj, marker?.managedMarketplaces ?? []);
+    info('✓ enabledPlugins retiré de settings.json');
   }
   if (fs.existsSync(markerPath(proj))) {
     fs.rmSync(markerPath(proj), { force: true });

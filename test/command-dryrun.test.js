@@ -21,7 +21,7 @@ test('apply --dry-run writes nothing', () => {
   assert.equal(code, 0);
   assert.equal(fs.existsSync(path.join(proj, '.claude', 'ccprofile.json')), false);
   assert.equal(fs.existsSync(path.join(proj, '.claude', 'skills', 's1')), false);
-  assert.equal(fs.existsSync(path.join(proj, '.claude', 'settings.local.json')), false);
+  assert.equal(fs.existsSync(path.join(proj, '.claude', 'settings.json')), false);
 });
 
 test('sync --dry-run writes nothing', () => {
@@ -32,12 +32,12 @@ test('sync --dry-run writes nothing', () => {
   fs.writeFileSync(path.join(home, 'profiles', 'p.json'), JSON.stringify({ plugins: ['x'], skills: ['s1'] }));
   const proj = fs.mkdtempSync(path.join(os.tmpdir(), 'ccp-'));
   writeMarker(proj, { profiles: ['p'], extraSkills: [], managedPlugins: [] });
-  const settingsBefore = fs.existsSync(path.join(proj, '.claude', 'settings.local.json'));
+  const settingsBefore = fs.existsSync(path.join(proj, '.claude', 'settings.json'));
   const cwd = process.cwd();
   process.chdir(proj);
   const code = sync.run(['--dry-run']);
   process.chdir(cwd);
   assert.equal(code, 0);
   assert.equal(fs.existsSync(path.join(proj, '.claude', 'skills', 's1')), false);
-  assert.equal(fs.existsSync(path.join(proj, '.claude', 'settings.local.json')), settingsBefore);
+  assert.equal(fs.existsSync(path.join(proj, '.claude', 'settings.json')), settingsBefore);
 });

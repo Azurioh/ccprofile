@@ -1,6 +1,5 @@
 // @ts-check
 import fs from 'node:fs';
-import path from 'node:path';
 import { skillsDir } from '../core/paths.js';
 import { projectDir } from '../core/project.js';
 import { readEnabledPlugins } from '../core/settings.js';
@@ -14,19 +13,21 @@ export function run(_args) {
   const dir = skillsDir(proj);
   let entries = [];
   try {
-    entries = fs.readdirSync(dir).sort();
+    entries = fs.readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name)
+      .sort();
   } catch {
     entries = [];
   }
-  const visible = entries.filter((e) => fs.existsSync(path.join(dir, e)));
-  if (visible.length === 0) {
+  if (entries.length === 0) {
     info('  (aucun)');
   } else {
-    for (const e of visible) {
-      info(`  ${path.basename(e)}`);
+    for (const e of entries) {
+      info(`  ${e}`);
     }
   }
-  info('-- plugins activés (settings.local.json) --');
+  info('-- plugins activés (settings.json) --');
   const plugins = readEnabledPlugins(proj);
   if (plugins.length === 0) {
     info('  (aucun)');
