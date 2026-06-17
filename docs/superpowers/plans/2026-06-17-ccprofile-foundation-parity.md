@@ -43,6 +43,7 @@ Every task implicitly includes these (copied verbatim from the spec):
 | `src/core/links.js` | `linkSkill` / `isBrokenLink` / `linkType`. |
 | `src/core/settings.js` | `readEnabledPlugins` / `mergePlugins` / `reconcilePlugins` / `clearEnabledPlugins`. |
 | `src/core/detect.js` | `collectSignals` / `detect`. |
+| `src/core/drift.js` | `computeDrift` — expected-vs-actual diff, shared by `verify` + `hint`. |
 | `src/commands/*.js` | One per subcommand: `list, detect, apply, skill, verify, sync, inspect, show, hint, reset`. |
 | `test/*.test.js` | `node:test` unit + parity tests with temp-dir fixtures. |
 | `.github/workflows/ci.yml` | Matrix lint + test (incl. Windows). |
@@ -621,16 +622,6 @@ Expected: FAIL (module not found).
 import fs from 'node:fs';
 import { profilePath } from './paths.js';
 import { readJson } from './json.js';
-import { die } from './util-bridge.js';
-```
-
-Note: to avoid a circular import worry, import `die` directly from `../util/log.js`. Use this exact code:
-
-```js
-// @ts-check
-import fs from 'node:fs';
-import { profilePath } from './paths.js';
-import { readJson } from './json.js';
 import { die } from '../util/log.js';
 
 /**
@@ -685,8 +676,6 @@ function dedup(arr) {
   return [...new Set(arr.filter(Boolean))];
 }
 ```
-
-(Delete the throwaway first code block — the file is the second block. Do not create `util-bridge.js`.)
 
 - [ ] **Step 4: Run tests + lint**
 
@@ -1712,9 +1701,12 @@ git commit -m "feat: add skill (à-la-carte) command"
 - Test: `test/command-verify.test.js`
 
 **Interfaces:**
-- Consumes: `projectDir`, `skillsDir`, `readMarker`, `resolveProfiles`, `readEnabledPlugins`, `isBrokenLink`, `info`.
+- This task creates **`src/core/drift.js`** (shared by `verify` and, later, `hint` — DRY, no duplication).
+- `drift.js` consumes: `skillsDir` (paths), `readEnabledPlugins` (settings), `resolveProfiles` (profiles), `isBrokenLink` (links).
+- `drift.js` produces: `computeDrift(proj, marker): { missingSkills, extraSkills, missingPlugins, stalePlugins, broken, count }` — all string arrays except `count: number`.
+- `verify.js` consumes: `projectDir`, `readMarker`, `computeDrift`, `info`.
 - Produces: `verify.run(args): number` returning `0`/`1`/`3`. `--json` emits `{status, missingSkills, extraSkills, missingPlugins, stalePlugins, broken}` where `status` is `in-sync`/`drift`/(for no marker) `no-marker`.
-- The drift sets, computed against sorted unique lists:
+- The drift sets in `computeDrift`, computed against sorted unique lists:
   - `expectedSkills = unique(resolved.skills + marker.extraSkills)`
   - `expectedPlugins = unique(resolved.plugins)`
   - `actualSkills` = entries in `.claude/skills`
@@ -1723,6 +1715,7 @@ git commit -m "feat: add skill (à-la-carte) command"
   - `missingPlugins = expectedPlugins ∖ actualPlugins`
   - `managedActive = managed ∩ actualPlugins`; `stalePlugins = managedActive ∖ expectedPlugins`
   - `broken` = broken symlinks in `.claude/skills`
+  - `count` = sum of the five array lengths
 
 - [ ] **Step 1: Write `test/command-verify.test.js`**
 
@@ -1775,38 +1768,28 @@ test('verify returns 0 when in sync', async () => {
 Run: `node --test test/command-verify.test.js`
 Expected: FAIL (module not found).
 
-- [ ] **Step 3: Write `src/commands/verify.js`**
+- [ ] **Step 3: Write `src/core/drift.js`** (shared drift computation)
 
 ```js
 // @ts-check
 import fs from 'node:fs';
 import path from 'node:path';
-import { skillsDir } from '../core/paths.js';
-import { projectDir } from '../core/project.js';
-import { readMarker } from '../core/marker.js';
-import { resolveProfiles } from '../core/profiles.js';
-import { readEnabledPlugins } from '../core/settings.js';
-import { isBrokenLink } from '../core/links.js';
-import { info } from '../util/log.js';
+import { skillsDir } from './paths.js';
+import { readEnabledPlugins } from './settings.js';
+import { resolveProfiles } from './profiles.js';
+import { isBrokenLink } from './links.js';
 
 const sortedUnique = (arr) => [...new Set(arr.filter(Boolean))].sort();
 const diff = (a, b) => { const sb = new Set(b); return a.filter((x) => !sb.has(x)); };
 const inter = (a, b) => { const sb = new Set(b); return a.filter((x) => sb.has(x)); };
 
-/** @param {string[]} args */
-export function run(args) {
-  const jsonMode = args[0] === '--json';
-  const proj = projectDir();
-  const marker = readMarker(proj);
-  if (!marker) {
-    if (jsonMode) {
-      info(JSON.stringify({ status: 'no-marker' }));
-    } else {
-      info('ccprofile: aucun profil appliqué (pas de .claude/ccprofile.json)');
-    }
-    return 3;
-  }
-
+/**
+ * Compute drift between a project's marker-expected state and its actual state.
+ * @param {string} proj
+ * @param {{ profiles?: string[], extraSkills?: string[], managedPlugins?: string[] }} marker
+ * @returns {{ missingSkills: string[], extraSkills: string[], missingPlugins: string[], stalePlugins: string[], broken: string[], count: number }}
+ */
+export function computeDrift(proj, marker) {
   const { plugins, skills } = resolveProfiles(marker.profiles ?? []);
   const expectedSkills = sortedUnique([...skills, ...(marker.extraSkills ?? [])]);
   const expectedPlugins = sortedUnique(plugins);
@@ -1824,37 +1807,67 @@ export function run(args) {
   const missingSkills = diff(expectedSkills, actualSkills);
   const extraSkills = diff(actualSkills, expectedSkills);
   const missingPlugins = diff(expectedPlugins, actualPlugins);
-  const managedActive = inter(managed, actualPlugins);
-  const stalePlugins = diff(managedActive, expectedPlugins);
+  const stalePlugins = diff(inter(managed, actualPlugins), expectedPlugins);
 
   let broken = [];
   try {
-    broken = sortedUnique(
-      fs.readdirSync(dir).filter((b) => isBrokenLink(path.join(dir, b)))
-    );
+    broken = actualSkills.filter((b) => isBrokenLink(path.join(dir, b)));
   } catch {
     broken = [];
   }
 
-  const n = missingSkills.length + extraSkills.length + missingPlugins.length + stalePlugins.length + broken.length;
+  const count =
+    missingSkills.length + extraSkills.length + missingPlugins.length + stalePlugins.length + broken.length;
+  return { missingSkills, extraSkills, missingPlugins, stalePlugins, broken, count };
+}
+```
+
+- [ ] **Step 4: Write `src/commands/verify.js`** (formats `computeDrift` output)
+
+```js
+// @ts-check
+import { projectDir } from '../core/project.js';
+import { readMarker } from '../core/marker.js';
+import { computeDrift } from '../core/drift.js';
+import { info } from '../util/log.js';
+
+/** @param {string[]} args */
+export function run(args) {
+  const jsonMode = args[0] === '--json';
+  const proj = projectDir();
+  const marker = readMarker(proj);
+  if (!marker) {
+    if (jsonMode) {
+      info(JSON.stringify({ status: 'no-marker' }));
+    } else {
+      info('ccprofile: aucun profil appliqué (pas de .claude/ccprofile.json)');
+    }
+    return 3;
+  }
+
+  const d = computeDrift(proj, marker);
 
   if (jsonMode) {
     info(JSON.stringify({
-      status: n === 0 ? 'in-sync' : 'drift',
-      missingSkills, extraSkills, missingPlugins, stalePlugins, broken
+      status: d.count === 0 ? 'in-sync' : 'drift',
+      missingSkills: d.missingSkills,
+      extraSkills: d.extraSkills,
+      missingPlugins: d.missingPlugins,
+      stalePlugins: d.stalePlugins,
+      broken: d.broken
     }));
-  } else if (n === 0) {
+  } else if (d.count === 0) {
     info(`✓ ccprofile: projet à jour avec '${(marker.profiles ?? []).join(' ')}'`);
   } else {
-    info(`⚠ ccprofile: dérive détectée (${n} écart(s))`);
-    printList('skills manquants (profil enrichi)', missingSkills);
-    printList('skills en trop (profil réduit / orphelins)', extraSkills);
-    printList('plugins manquants', missingPlugins);
-    printList('plugins obsolètes', stalePlugins);
-    printList('symlinks cassés (skill retiré du store)', broken);
+    info(`⚠ ccprofile: dérive détectée (${d.count} écart(s))`);
+    printList('skills manquants (profil enrichi)', d.missingSkills);
+    printList('skills en trop (profil réduit / orphelins)', d.extraSkills);
+    printList('plugins manquants', d.missingPlugins);
+    printList('plugins obsolètes', d.stalePlugins);
+    printList('symlinks cassés (skill retiré du store)', d.broken);
     info('  → lance: ccprofile sync');
   }
-  return n === 0 ? 0 : 1;
+  return d.count === 0 ? 0 : 1;
 }
 
 /**
@@ -1872,7 +1885,7 @@ function printList(title, body) {
 }
 ```
 
-- [ ] **Step 4: Wire dispatcher — modify `src/cli.js`**
+- [ ] **Step 5: Wire dispatcher — modify `src/cli.js`**
 
 ```js
 import * as verify from './commands/verify.js';
@@ -1882,16 +1895,16 @@ import * as verify from './commands/verify.js';
         return await verify.run(rest);
 ```
 
-- [ ] **Step 5: Run tests + lint**
+- [ ] **Step 6: Run tests + lint**
 
 Run: `node --test && pnpm lint`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add -A
-git commit -m "feat: add verify command with 0/1/3 exit codes"
+git commit -m "feat: add drift module + verify command (0/1/3 exit codes)"
 ```
 
 ---
@@ -2050,7 +2063,7 @@ git commit -m "feat: add sync command"
 - Test: `test/commands-show-hint-reset.test.js`
 
 **Interfaces:**
-- Consumes: `projectDir`, `skillsDir`, `readEnabledPlugins`/`clearEnabledPlugins`, `readMarker`, `detect`, `verify` (reuse `verify.run` indirectly via re-computing), `info`.
+- Consumes: `projectDir`, `skillsDir`, `markerPath`/`settingsPath`, `readEnabledPlugins`/`clearEnabledPlugins`, `readMarker`, `computeDrift` (core/drift), `detect`, `info`.
 - Produces: `show.run`, `hint.run`, `reset.run` — each `: number`.
 - `hint` must be silent when in-sync, print the drift line when drifted, and print the detect suggestion when no marker. No network. Never throws (wrap in try/catch returning 0).
 
@@ -2200,24 +2213,15 @@ export function run(_args) {
 }
 ```
 
-- [ ] **Step 5: Write `src/commands/hint.js`**
+- [ ] **Step 5: Write `src/commands/hint.js`** (reuses `computeDrift` — no duplication)
 
 ```js
 // @ts-check
 import { projectDir } from '../core/project.js';
 import { readMarker } from '../core/marker.js';
-import { resolveProfiles } from '../core/profiles.js';
+import { computeDrift } from '../core/drift.js';
 import { detect } from '../core/detect.js';
-import { skillsDir } from '../core/paths.js';
-import { readEnabledPlugins } from '../core/settings.js';
-import { isBrokenLink } from '../core/links.js';
 import { info } from '../util/log.js';
-import fs from 'node:fs';
-import path from 'node:path';
-
-const sortedUnique = (arr) => [...new Set(arr.filter(Boolean))].sort();
-const diff = (a, b) => { const sb = new Set(b); return a.filter((x) => !sb.has(x)); };
-const inter = (a, b) => { const sb = new Set(b); return a.filter((x) => sb.has(x)); };
 
 /** @param {string[]} _args */
 export function run(_args) {
@@ -2225,10 +2229,10 @@ export function run(_args) {
     const proj = projectDir();
     const marker = readMarker(proj);
     if (marker) {
-      const n = driftCount(proj, marker);
-      if (n > 0) {
+      const { count } = computeDrift(proj, marker);
+      if (count > 0) {
         const prof = (marker.profiles ?? []).join(',');
-        info(`⚠ ccprofile: profil '${prof}' obsolète (${n} écart(s)) — lance: ccprofile sync`);
+        info(`⚠ ccprofile: profil '${prof}' obsolète (${count} écart(s)) — lance: ccprofile sync`);
       }
     } else {
       const rec = detect(proj).recommended;
@@ -2241,31 +2245,7 @@ export function run(_args) {
   }
   return 0;
 }
-
-/**
- * @param {string} proj
- * @param {*} marker
- */
-function driftCount(proj, marker) {
-  const { plugins, skills } = resolveProfiles(marker.profiles ?? []);
-  const expectedSkills = sortedUnique([...skills, ...(marker.extraSkills ?? [])]);
-  const expectedPlugins = sortedUnique(plugins);
-  const dir = skillsDir(proj);
-  let actualSkills = [];
-  try { actualSkills = sortedUnique(fs.readdirSync(dir)); } catch { actualSkills = []; }
-  const actualPlugins = readEnabledPlugins(proj);
-  const managed = sortedUnique(marker.managedPlugins ?? []);
-  const missingSkills = diff(expectedSkills, actualSkills);
-  const extraSkills = diff(actualSkills, expectedSkills);
-  const missingPlugins = diff(expectedPlugins, actualPlugins);
-  const stalePlugins = diff(inter(managed, actualPlugins), expectedPlugins);
-  let broken = [];
-  try { broken = actualSkills.filter((b) => isBrokenLink(path.join(dir, b))); } catch { broken = []; }
-  return missingSkills.length + extraSkills.length + missingPlugins.length + stalePlugins.length + broken.length;
-}
 ```
-
-Note: the drift computation is duplicated between `verify.js` and `hint.js`. Acceptable for this task; **Plan 2 extracts it into `src/core/drift.js`** and both consume it (DRY). Do not extract now — keep tasks isolated.
 
 - [ ] **Step 6: Wire dispatcher — modify `src/cli.js`**
 
@@ -2483,4 +2463,4 @@ Expected: all matrix legs (incl. windows-latest) pass — this is the real cross
 
 **Type consistency:** Command modules all export `run(args): number | Promise<number>`. `resolveProfiles` returns `{plugins, skills}` consistently consumed by apply/verify/sync/inspect/hint. `linkSkill(skill, destDir)`, `isBrokenLink(p)`, `readMarker`→`{profiles,extraSkills,managedPlugins,...}|null`, `writeMarker(proj, {profiles,extraSkills,managedPlugins})`, `readEnabledPlugins(proj)`, `reconcilePlugins(proj, expected, managed)` — names match across all consuming tasks.
 
-**Known intentional duplication:** drift computation in `verify.js` and `hint.js` — flagged in Task 15 for extraction in Plan 2.
+**DRY:** drift computation lives once in `src/core/drift.js` (Task 13), consumed by both `verify` and `hint` (Task 15). No duplication.
