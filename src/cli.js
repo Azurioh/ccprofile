@@ -12,6 +12,7 @@ import * as hint from './commands/hint.js';
 import * as reset from './commands/reset.js';
 import * as validate from './commands/validate.js';
 import * as diff from './commands/diff.js';
+import * as doctor from './commands/doctor.js';
 
 const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = core minimal)
 
@@ -73,6 +74,8 @@ export async function run(argv) {
         return await validate.run(rest);
       case 'diff':
         return await diff.run(rest);
+      case 'doctor':
+        return await doctor.run(rest);
       default:
         throw new CcprofileError(`commande inconnue: ${cmd} (voir: ccprofile help)`);
     }
