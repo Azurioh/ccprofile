@@ -19,10 +19,19 @@ test('single profile (with meta) parses to one profile keyed by meta.name', () =
 });
 
 test('dependencyReport lists skills missing from the store', () => {
+  const prev = process.env.CLAUDE_CONFIG_DIR;
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cch-'));
   process.env.CLAUDE_CONFIG_DIR = home;
-  fs.mkdirSync(path.join(home, 'skills-store', 'have'), { recursive: true });
-  const r = dependencyReport({ skills: ['have', 'missing'], plugins: ['p1'] });
-  assert.deepEqual(r.missingSkills, ['missing']);
-  assert.deepEqual(r.requiredPlugins, ['p1']);
+  try {
+    fs.mkdirSync(path.join(home, 'skills-store', 'have'), { recursive: true });
+    const r = dependencyReport({ skills: ['have', 'missing'], plugins: ['p1'] });
+    assert.deepEqual(r.missingSkills, ['missing']);
+    assert.deepEqual(r.requiredPlugins, ['p1']);
+  } finally {
+    if (prev === undefined) {
+      delete process.env.CLAUDE_CONFIG_DIR;
+    } else {
+      process.env.CLAUDE_CONFIG_DIR = prev;
+    }
+  }
 });
