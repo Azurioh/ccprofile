@@ -33,9 +33,11 @@ export function run(args) {
     storeEntries = [];
   }
   const store = new Set(storeEntries);
-  for (const s of obj.skills ?? []) {
-    if (!store.has(s)) {
-      errors.push(`skill absent du store: ${s}`);
+  if (Array.isArray(obj.skills)) {
+    for (const s of obj.skills) {
+      if (!store.has(s)) {
+        errors.push(`skill absent du store: ${s}`);
+      }
     }
   }
   try {
