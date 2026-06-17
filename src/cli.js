@@ -33,7 +33,14 @@ const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = cor
   ccprofile show                  état du projet courant
   ccprofile hint                  ligne unique pour hook SessionStart (silencieux si à jour)
   ccprofile reset                 vide skills + plugins + marqueur du projet courant
+  ccprofile init [--force]        copie les profils par défaut dans ~/.claude/profiles
+  ccprofile validate <profil>     valide un profil (schéma + skills/plugins référencés)
+  ccprofile doctor                diagnostic santé (profils, liens cassés, env)
+  ccprofile export <profil> [--resolved] [--out <f>]  exporte un profil (JSON)
+  ccprofile import <fichier|url>  importe un profil/bundle partagé
   ccprofile share <profil> [--resolved] | --all  publie un profil (ou tous) sur GitHub Gist
+  ccprofile pull <gist|url>       importe un profil/bundle depuis un gist
+  ccprofile upgrade               met à jour ccprofile (npm -g)
 
 Profils : ~/.claude/profiles/*.json     Store : ~/.claude/skills-store
 Marqueur: <projet>/.claude/ccprofile.json`;
