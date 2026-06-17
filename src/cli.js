@@ -1,5 +1,7 @@
 // @ts-check
 import { CcprofileError } from './util/log.js';
+import * as list from './commands/list.js';
+import * as inspect from './commands/inspect.js';
 
 const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = core minimal)
 
@@ -27,6 +29,7 @@ function usage() {
  */
 export async function run(argv) {
   const cmd = argv[0] ?? '';
+  const rest = argv.slice(1);
   try {
     switch (cmd) {
       case '':
@@ -35,6 +38,10 @@ export async function run(argv) {
       case 'help':
         usage();
         return 0;
+      case 'list':
+        return await list.run(rest);
+      case 'inspect':
+        return await inspect.run(rest);
       default:
         throw new CcprofileError(`commande inconnue: ${cmd} (voir: ccprofile help)`);
     }
