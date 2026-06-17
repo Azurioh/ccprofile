@@ -18,6 +18,7 @@ import * as upgrade from './commands/upgrade.js';
 import * as exportCmd from './commands/export.js';
 import * as importCmd from './commands/import.js';
 import * as shareCmd from './commands/share.js';
+import * as pull from './commands/pull.js';
 
 const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = core minimal)
 
@@ -90,6 +91,8 @@ export async function run(argv) {
         return await exportCmd.run(rest);
       case 'import':
         return await importCmd.run(rest);
+      case 'pull':
+        return await pull.run(rest);
       case 'share':
         return await shareCmd.run(rest);
       default:
