@@ -17,6 +17,7 @@ import * as init from './commands/init.js';
 import * as upgrade from './commands/upgrade.js';
 import * as exportCmd from './commands/export.js';
 import * as importCmd from './commands/import.js';
+import * as shareCmd from './commands/share.js';
 
 const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = core minimal)
 
@@ -31,6 +32,7 @@ const USAGE = `ccprofile — plugins/skills Claude Code par projet (global = cor
   ccprofile show                  état du projet courant
   ccprofile hint                  ligne unique pour hook SessionStart (silencieux si à jour)
   ccprofile reset                 vide skills + plugins + marqueur du projet courant
+  ccprofile share <profil> [--resolved] | --all  publie un profil (ou tous) sur GitHub Gist
 
 Profils : ~/.claude/profiles/*.json     Store : ~/.claude/skills-store
 Marqueur: <projet>/.claude/ccprofile.json`;
@@ -88,6 +90,8 @@ export async function run(argv) {
         return await exportCmd.run(rest);
       case 'import':
         return await importCmd.run(rest);
+      case 'share':
+        return await shareCmd.run(rest);
       default:
         throw new CcprofileError(`commande inconnue: ${cmd} (voir: ccprofile help)`);
     }
