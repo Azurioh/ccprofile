@@ -1,5 +1,6 @@
 // @ts-check
 import { CcprofileError } from './util/log.js';
+import * as apply from './commands/apply.js';
 import * as list from './commands/list.js';
 import * as inspect from './commands/inspect.js';
 import * as detect from './commands/detect.js';
@@ -41,6 +42,8 @@ export async function run(argv) {
         return 0;
       case 'list':
         return await list.run(rest);
+      case 'apply':
+        return await apply.run(rest);
       case 'detect':
         return await detect.run(rest);
       case 'inspect':
